@@ -12,7 +12,7 @@
     />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
-  <body>
+  <body data-desktop="{{ 1 if desktop_mode else 0 }}">
     <div class="backdrop"></div>
     <main class="shell">
       <header class="hero">
@@ -55,6 +55,18 @@
         <p id="status" class="status" aria-live="polite"></p>
       </section>
     </main>
+
+    <section id="console-drawer" class="console-drawer" aria-hidden="true">
+      <div id="console-resizer" class="console-resizer" title="Trascina per ridimensionare"></div>
+      <div class="console-header">
+        <strong>Console Integrata</strong>
+        <div class="console-actions">
+          <span class="console-hint">Ctrl+\ per mostrare/nascondere</span>
+          <button id="console-clear" class="console-clear" type="button">Pulisci</button>
+        </div>
+      </div>
+      <div id="console-output" class="console-output" aria-live="polite"></div>
+    </section>
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+from collections import deque
+from datetime import datetime
 import io
+import itertools
 import json
 import mimetypes
 import pathlib
@@ -35,6 +38,9 @@ VIDEO_FORMATS = {"mp4", "mkv", "mov", "avi", "webm"}
 MEDIA_FORMATS = AUDIO_FORMATS | VIDEO_FORMATS
 ALLOWED_FORMATS = STRUCTURED_FORMATS | MEDIA_FORMATS
 TEXT_FORMATS = {"txt", "md"}
+LOG_BUFFER = deque(maxlen=400)
+LOG_SEQ = itertools.count(1)
+LOG_LOCK = threading.Lock()
 
 
 @dataclass
@@ -46,6 +52,22 @@ class ConversionResult:
 
 class ConversionError(Exception):
     pass
+
+
+def add_app_log(level: str, message: str) -> None:
+    entry = {
+        "id": next(LOG_SEQ),
+        "level": level,
+        "message": message,
+        "timestamp": datetime.now().strftime("%H:%M:%S"),
+    }
+    with LOG_LOCK:
+        LOG_BUFFER.append(entry)
+
+
+def _read_logs_since(since_id: int) -> list[dict[str, str | int]]:
+    with LOG_LOCK:
+        return [entry for entry in LOG_BUFFER if int(entry["id"]) > since_id]
 
 
 def pick_port(host: str, start_port: int, attempts: int = 30) -> int:
@@ -194,7 +216,17 @@ def serialize_content(data: Any, target_format: str) -> ConversionResult:
 
 @app.route("/")
 def index() -> str:
-    return render_template("index.html", formats=sorted(ALLOWED_FORMATS))
+    desktop_mode = request.args.get("desktop") == "1"
+    return render_template("index.html", formats=sorted(ALLOWED_FORMATS), desktop_mode=desktop_mode)
+
+
+@app.route("/api/logs", methods=["GET"])
+def api_logs():
+    try:
+        since_id = int(request.args.get("since", "0"))
+    except ValueError:
+        since_id = 0
+    return jsonify({"logs": _read_logs_since(since_id)})
 
 
 @app.route("/api/convert", methods=["POST"])
@@ -216,6 +248,8 @@ def convert_file():
         else:
             source_format = detect_format(uploaded.filename)
 
+        add_app_log("info", f"Conversione richiesta: {uploaded.filename} ({source_format} -> {target_format})")
+
         raw = uploaded.read()
         if source_format in MEDIA_FORMATS or target_format in MEDIA_FORMATS:
             if source_format not in MEDIA_FORMATS or target_format not in MEDIA_FORMATS:
@@ -227,6 +261,7 @@ def convert_file():
             result = serialize_content(parsed, target_format)
 
         output_name = f"{pathlib.Path(uploaded.filename).stem}_converted.{result.extension}"
+        add_app_log("ok", f"Conversione completata: {output_name}")
         return send_file(
             io.BytesIO(result.payload),
             mimetype=result.mime_type,
@@ -234,8 +269,10 @@ def convert_file():
             download_name=output_name,
         )
     except ConversionError as exc:
+        add_app_log("error", f"Errore conversione: {exc}")
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
+        add_app_log("error", f"Errore interno: {exc}")
         return jsonify({"error": f"Errore interno: {exc}"}), 500
 
 
@@ -263,6 +300,8 @@ if __name__ == "__main__":
     selected_port = pick_port(args.host, args.port)
     if selected_port != args.port:
         print(f"Porta {args.port} non disponibile. Avvio su {selected_port}.")
+
+    add_app_log("info", f"Server avviato su http://{args.host}:{selected_port}")
 
     if args.open_browser:
         app_url = f"http://{args.host}:{selected_port}"

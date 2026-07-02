@@ -21,7 +21,7 @@ set "ICON_ARG="
 if exist "assets\formatforge.ico" set "ICON_ARG=--icon assets\formatforge.ico"
 
 pyinstaller --noconsole --onefile --name FormatForgeWeb %ICON_ARG% --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
-pyinstaller --onefile --name FormatForgeDesktop %ICON_ARG% --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
+pyinstaller --noconsole --onefile --name FormatForgeDesktop %ICON_ARG% --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 
 echo.
 echo [DONE] EXE disponibili in dist\FormatForgeWeb.exe e dist\FormatForgeDesktop.exe

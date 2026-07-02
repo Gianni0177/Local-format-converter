@@ -41,7 +41,7 @@ jobs:
           }
 
           & pyinstaller --noconsole --onefile --name FormatForgeWeb @iconArg --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
-          & pyinstaller --onefile --name FormatForgeDesktop @iconArg --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
+          & pyinstaller --noconsole --onefile --name FormatForgeDesktop @iconArg --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4

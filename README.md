@@ -73,7 +73,7 @@ Output:
 
 - FormatForgeWeb.exe: avvia il server locale in background e apre il browser di sistema.
 - FormatForgeDesktop.exe: avvia l'app in finestra desktop Windows (senza browser esterno).
-- In FormatForgeDesktop.exe la console e nascosta di default e puo essere mostrata/nascosta con CTRL+\\.
+- In FormatForgeDesktop.exe la console e integrata nell'app: pannello in basso, nascosto di default, apribile con CTRL+\\ e ridimensionabile trascinando il bordo superiore.
 
 ### Personalizzazione icona e titolo finestra
 
@@ -108,7 +108,7 @@ python -m venv .venv
 .venv\\Scripts\\activate
 pip install -r requirements.txt
 pyinstaller --noconsole --onefile --name FormatForgeWeb --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
-pyinstaller --onefile --name FormatForgeDesktop --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
+pyinstaller --noconsole --onefile --name FormatForgeDesktop --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 ```
 
 ## Note

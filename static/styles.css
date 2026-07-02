@@ -7,6 +7,7 @@
   --paper: #f6f7f4;
   --card: rgba(246, 247, 244, 0.92);
   --danger: #b3261e;
+  --console-height: 220px;
 }
 
 * {
@@ -157,4 +158,88 @@ button:disabled {
     grid-template-columns: 1fr;
     gap: 0;
   }
+}
+
+.console-drawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--console-height);
+  background: #0a1413;
+  color: #d6f4ea;
+  border-top: 1px solid rgba(157, 242, 213, 0.35);
+  box-shadow: 0 -16px 34px rgba(0, 0, 0, 0.45);
+  transform: translateY(calc(100% - 40px));
+  transition: transform 220ms ease;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+}
+
+.console-drawer.open {
+  transform: translateY(0);
+}
+
+.console-resizer {
+  height: 8px;
+  cursor: ns-resize;
+  background: linear-gradient(90deg, rgba(157, 242, 213, 0.2), rgba(255, 183, 3, 0.25));
+}
+
+.console-header {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.86rem;
+  border-bottom: 1px solid rgba(157, 242, 213, 0.24);
+}
+
+.console-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.console-hint {
+  opacity: 0.8;
+  font-size: 0.78rem;
+}
+
+.console-clear {
+  width: auto;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(157, 242, 213, 0.4);
+  background: transparent;
+  color: #d6f4ea;
+  cursor: pointer;
+}
+
+.console-output {
+  flex: 1;
+  overflow: auto;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  padding: 0.55rem 0.75rem 0.9rem;
+}
+
+.console-line {
+  white-space: pre-wrap;
+  margin: 0 0 0.2rem;
+}
+
+.console-line.error {
+  color: #ff9494;
+}
+
+.console-line.ok {
+  color: #80f2b2;
+}
+
+body[data-desktop="0"] .console-drawer {
+  display: none;
 }
