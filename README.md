@@ -31,11 +31,22 @@ Web app per convertire file tra piu formati con una GUI semplice.
 - AVI
 - WEBM
 
+### Immagini
+
+- PNG
+- JPG / JPEG
+- WEBP
+- BMP
+- GIF
+- TIFF
+- ICO
+
 ## Regole conversione
 
 - Dati/testo: conversioni tra i formati strutturati elencati sopra.
 - Media: consentite audio -> audio, video -> video e video -> audio.
-- Non sono consentite conversioni miste tra media e testo/strutturati.
+- Immagini: consentite conversioni immagine -> immagine.
+- Non sono consentite conversioni miste tra binary (audio/video/immagini) e testo/strutturati.
 
 ## Avvio locale
 

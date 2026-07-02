@@ -1,8 +1,11 @@
 import builtins
+import io
 import importlib.util
 import pathlib
 import sys
 import types
+
+from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
@@ -46,3 +49,24 @@ def test_app_import_falls_back_to_tomli(monkeypatch):
     assert spec.loader is not None
     spec.loader.exec_module(module)
     assert module.parse_content("value = 1", "toml") == {"fallback": "value = 1"}
+
+
+def test_image_conversion_png_to_webp():
+    source = io.BytesIO()
+    image = Image.new("RGB", (8, 8), (255, 0, 0))
+    image.save(source, format="PNG")
+    source.seek(0)
+
+    client = app.test_client()
+    response = client.post(
+        "/api/convert",
+        data={
+            "source_format": "png",
+            "target_format": "webp",
+            "file": (source, "sample.png"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+    assert response.headers.get("content-disposition", "").lower().find("sample_converted.webp") != -1

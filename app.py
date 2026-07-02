@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from imageio_ffmpeg import get_ffmpeg_exe
+from PIL import Image
 import tomli_w
 import xmltodict
 import yaml
@@ -35,8 +36,10 @@ app = Flask(__name__)
 STRUCTURED_FORMATS = {"json", "csv", "yaml", "toml", "xml", "txt", "md"}
 AUDIO_FORMATS = {"mp3", "wav", "flac", "aac", "ogg", "m4a"}
 VIDEO_FORMATS = {"mp4", "mkv", "mov", "avi", "webm"}
+IMAGE_FORMATS = {"png", "jpg", "jpeg", "webp", "bmp", "gif", "tiff", "ico"}
 MEDIA_FORMATS = AUDIO_FORMATS | VIDEO_FORMATS
-ALLOWED_FORMATS = STRUCTURED_FORMATS | MEDIA_FORMATS
+BINARY_FORMATS = MEDIA_FORMATS | IMAGE_FORMATS
+ALLOWED_FORMATS = STRUCTURED_FORMATS | BINARY_FORMATS
 TEXT_FORMATS = {"txt", "md"}
 LOG_BUFFER = deque(maxlen=400)
 LOG_SEQ = itertools.count(1)
@@ -117,7 +120,9 @@ def parse_content(text: str, source_format: str) -> Any:
     raise ConversionError(f"Formato sorgente non valido: {source_format}")
 
 
-def _is_media_conversion_allowed(source_format: str, target_format: str) -> bool:
+def _is_binary_conversion_allowed(source_format: str, target_format: str) -> bool:
+    if source_format in IMAGE_FORMATS and target_format in IMAGE_FORMATS:
+        return True
     if source_format in VIDEO_FORMATS and target_format in MEDIA_FORMATS:
         return True
     if source_format in AUDIO_FORMATS and target_format in AUDIO_FORMATS:
@@ -125,8 +130,31 @@ def _is_media_conversion_allowed(source_format: str, target_format: str) -> bool
     return False
 
 
+def _convert_image(raw: bytes, source_format: str, target_format: str) -> ConversionResult:
+    if source_format not in IMAGE_FORMATS or target_format not in IMAGE_FORMATS:
+        raise ConversionError("Conversione immagine non valida")
+
+    with Image.open(io.BytesIO(raw)) as img:
+        img.load()
+        normalized_target = "JPEG" if target_format in {"jpg", "jpeg"} else target_format.upper()
+
+        if normalized_target in {"JPEG", "ICO"} and img.mode in {"RGBA", "LA", "P"}:
+            img = img.convert("RGB")
+
+        output = io.BytesIO()
+        save_kwargs: dict[str, Any] = {}
+        if normalized_target == "JPEG":
+            save_kwargs["quality"] = 92
+            save_kwargs["optimize"] = True
+        img.save(output, format=normalized_target, **save_kwargs)
+        payload = output.getvalue()
+
+    guessed_mime = mimetypes.guess_type(f"file.{target_format}")[0] or "application/octet-stream"
+    return ConversionResult(payload=payload, mime_type=guessed_mime, extension=target_format)
+
+
 def _convert_media(raw: bytes, source_format: str, target_format: str) -> ConversionResult:
-    if not _is_media_conversion_allowed(source_format, target_format):
+    if not _is_binary_conversion_allowed(source_format, target_format):
         raise ConversionError(
             "Conversione media non supportata: consentite audio->audio, video->video e video->audio"
         )
@@ -251,10 +279,17 @@ def convert_file():
         add_app_log("info", f"Conversione richiesta: {uploaded.filename} ({source_format} -> {target_format})")
 
         raw = uploaded.read()
-        if source_format in MEDIA_FORMATS or target_format in MEDIA_FORMATS:
-            if source_format not in MEDIA_FORMATS or target_format not in MEDIA_FORMATS:
-                raise ConversionError("Non puoi mischiare conversioni media con formati testuali/strutturati")
-            result = _convert_media(raw, source_format, target_format)
+        if source_format in BINARY_FORMATS or target_format in BINARY_FORMATS:
+            if source_format not in BINARY_FORMATS or target_format not in BINARY_FORMATS:
+                raise ConversionError("Non puoi mischiare conversioni binary con formati testuali/strutturati")
+            if not _is_binary_conversion_allowed(source_format, target_format):
+                raise ConversionError(
+                    "Conversione binary non supportata: immagini->immagini, audio->audio, video->video, video->audio"
+                )
+            if source_format in IMAGE_FORMATS and target_format in IMAGE_FORMATS:
+                result = _convert_image(raw, source_format, target_format)
+            else:
+                result = _convert_media(raw, source_format, target_format)
         else:
             text = decode_text(raw)
             parsed = parse_content(text, source_format)
