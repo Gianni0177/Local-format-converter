@@ -9,7 +9,6 @@ import os
 import socket
 import subprocess
 import tempfile
-import tomllib
 from dataclasses import dataclass
 from typing import Any
 
@@ -18,6 +17,11 @@ import tomli_w
 import xmltodict
 import yaml
 from flask import Flask, jsonify, render_template, request, send_file
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 app = Flask(__name__)
 
