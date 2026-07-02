@@ -4,10 +4,12 @@ const submitBtn = document.getElementById("submit-btn");
 const fileInput = document.getElementById("file-input");
 const sourceFormatInput = document.getElementById("source-format");
 const targetFormatInput = document.getElementById("target-format");
-const formatDropdownToggle = document.getElementById("format-dropdown-toggle");
-const formatDropdownPanel = document.getElementById("format-dropdown-panel");
-const formatTabs = Array.from(document.querySelectorAll(".format-tab"));
-const formatTableBody = document.getElementById("format-table-body");
+const sourceToggle = document.getElementById("source-format-toggle");
+const targetToggle = document.getElementById("target-format-toggle");
+const sourcePanel = document.getElementById("source-format-panel");
+const targetPanel = document.getElementById("target-format-panel");
+const sourceList = document.getElementById("source-format-list");
+const targetList = document.getElementById("target-format-list");
 const afterDownloadBox = document.getElementById("after-download");
 const locateBtn = document.getElementById("locate-btn");
 const downloadNote = document.getElementById("download-note");
@@ -23,30 +25,26 @@ let drawerHeight = 220;
 let lastSavedPath = "";
 let selectedSourceFormat = "auto";
 let selectedTargetFormat = "";
-
-const formatCategories = {
-  data: ["json", "csv", "yaml", "toml", "xml", "txt", "md"],
-  image: ["png", "jpg", "jpeg", "webp", "bmp", "gif", "tiff", "ico"],
-  media: [
-    { group: "Audio", formats: ["mp3", "wav", "flac", "aac", "ogg", "m4a"] },
-    { group: "Video", formats: ["mp4", "mkv", "mov", "avi", "webm"] },
-  ],
+let openPickerRole = null;
+let activeTabs = {
+  source: "data",
+  target: "data",
 };
 
-const categoryFormatLookup = new Map([
-  ["data", new Set(formatCategories.data)],
-  ["image", new Set(formatCategories.image)],
-  ["media", new Set([...formatCategories.media[0].formats, ...formatCategories.media[1].formats])],
-]);
+const formatCatalog = {
+  data: ["json", "csv", "yaml", "toml", "xml", "txt", "md"],
+  image: ["png", "jpg", "jpeg", "webp", "bmp", "gif", "tiff", "ico"],
+  media: {
+    audio: ["mp3", "wav", "flac", "aac", "ogg", "m4a"],
+    video: ["mp4", "mkv", "mov", "avi", "webm"],
+  },
+};
 
 const formatToCategory = new Map();
-for (const [category, values] of categoryFormatLookup.entries()) {
-  for (const value of values) {
-    formatToCategory.set(value, category);
-  }
-}
-
-let activeTab = "data";
+for (const format of formatCatalog.data) formatToCategory.set(format, "data");
+for (const format of formatCatalog.image) formatToCategory.set(format, "image");
+for (const format of formatCatalog.media.audio) formatToCategory.set(format, "media");
+for (const format of formatCatalog.media.video) formatToCategory.set(format, "media");
 
 function addConsoleLine(level, message, timestamp = null) {
   if (!isDesktopMode || !consoleOutput) return;
@@ -59,72 +57,6 @@ function addConsoleLine(level, message, timestamp = null) {
     consoleOutput.firstElementChild.remove();
   }
   consoleOutput.scrollTop = consoleOutput.scrollHeight;
-}
-
-function normalizeFormatList(values) {
-  return values.filter((value) => Boolean(value));
-}
-
-function renderCategoryRows(category) {
-  const rows = [];
-  if (category === "media") {
-    for (const block of formatCategories.media) {
-      rows.push(`<tr class="format-group-row"><td colspan="3">${block.group}</td></tr>`);
-      for (const fmt of normalizeFormatList(block.formats)) {
-        rows.push(renderFormatRow(fmt));
-      }
-    }
-    return rows.join("");
-  }
-
-  const formats = formatCategories[category] || [];
-  return normalizeFormatList(formats).map((fmt) => renderFormatRow(fmt)).join("");
-}
-
-function renderFormatRow(fmt) {
-  const lower = String(fmt).toLowerCase();
-  return `
-    <tr>
-      <td>${lower.toUpperCase()}</td>
-      <td><input type="radio" name="source-pick" value="${lower}" ${selectedSourceFormat === lower ? "checked" : ""} /></td>
-      <td><input type="radio" name="target-pick" value="${lower}" ${selectedTargetFormat === lower ? "checked" : ""} /></td>
-    </tr>
-  `;
-}
-
-function renderActiveTab() {
-  if (!formatTableBody) return;
-  formatTableBody.innerHTML = renderCategoryRows(activeTab);
-  bindFormatPickers();
-  updateHiddenFormats();
-}
-
-function setActiveTab(tab) {
-  activeTab = tab;
-  for (const button of formatTabs) {
-    const isActive = button.dataset.tab === tab;
-    button.classList.toggle("active", isActive);
-    button.setAttribute("aria-selected", isActive ? "true" : "false");
-  }
-  renderActiveTab();
-}
-
-function openFormatDropdown(open) {
-  if (!formatDropdownPanel || !formatDropdownToggle) return;
-  formatDropdownPanel.classList.toggle("hidden", !open);
-  formatDropdownToggle.setAttribute("aria-expanded", open ? "true" : "false");
-}
-
-function toggleFormatDropdown() {
-  const isHidden = formatDropdownPanel.classList.contains("hidden");
-  openFormatDropdown(isHidden);
-}
-
-function getCurrentPickers() {
-  return {
-    source: Array.from(document.querySelectorAll('input[name="source-pick"]')),
-    target: Array.from(document.querySelectorAll('input[name="target-pick"]')),
-  };
 }
 
 function setConsoleOpen(open) {
@@ -155,7 +87,7 @@ async function pullServerLogs() {
       addConsoleLine(entry.level || "info", entry.message || "", entry.timestamp || null);
     }
   } catch {
-    // Console drawer should stay non-intrusive.
+    // non intrusivo
   }
 }
 
@@ -232,42 +164,141 @@ function showAfterDownload(canLocate, note) {
   setDownloadNote(note);
 }
 
-function selectRadioByValue(radios, value) {
-  const normalized = String(value || "").toLowerCase();
-  let found = false;
-  for (const radio of radios) {
-    const match = radio.value.toLowerCase() === normalized;
-    radio.checked = match;
-    if (match) found = true;
-  }
-  return found;
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
-function updateHiddenFormats() {
-  sourceFormatInput.value = selectedSourceFormat || "auto";
-  targetFormatInput.value = selectedTargetFormat || "";
+function toggleText(role) {
+  if (role === "source") {
+    return selectedSourceFormat === "auto"
+      ? "Sorgente: Auto"
+      : `Sorgente: ${selectedSourceFormat.toUpperCase()}`;
+  }
+  return selectedTargetFormat ? `Destinazione: ${selectedTargetFormat.toUpperCase()}` : "Destinazione: scegli formato";
+}
+
+function openPicker(role, open) {
+  const panel = role === "source" ? sourcePanel : targetPanel;
+  const toggle = role === "source" ? sourceToggle : targetToggle;
+  const otherRole = role === "source" ? "target" : "source";
+  const otherPanel = otherRole === "source" ? sourcePanel : targetPanel;
+  const otherToggle = otherRole === "source" ? sourceToggle : targetToggle;
+
+  if (!panel || !toggle) return;
+
+  if (open) {
+    otherPanel?.classList.add("hidden");
+    otherToggle?.setAttribute("aria-expanded", "false");
+    if (openPickerRole && openPickerRole !== role) {
+      renderPicker(openPickerRole);
+    }
+    openPickerRole = role;
+  } else if (openPickerRole === role) {
+    openPickerRole = null;
+  }
+
+  panel.classList.toggle("hidden", !open);
+  toggle.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function renderChip(value, label, role) {
+  const selected = role === "source" ? selectedSourceFormat === value : selectedTargetFormat === value;
+  return `
+    <button type="button" class="format-chip${selected ? " selected" : ""}" data-role="${role}" data-value="${escapeHtml(value)}">
+      ${escapeHtml(label)}
+    </button>
+  `;
+}
+
+function renderGroup(title, values, role) {
+  const chips = values.map((value) => renderChip(value, value.toUpperCase(), role)).join("");
+  return `
+    <section class="format-chip-group">
+      <div class="format-chip-group-title">${escapeHtml(title)}</div>
+      <div class="format-chip-grid">${chips}</div>
+    </section>
+  `;
+}
+
+function renderPicker(role) {
+  const panel = role === "source" ? sourcePanel : targetPanel;
+  const list = role === "source" ? sourceList : targetList;
+  if (!panel || !list) return;
+
+  const tab = activeTabs[role] || "data";
+  const body = [];
+
+  if (role === "source") {
+    body.push(`
+      <div class="format-chip-group">
+        <div class="format-chip-group-title">Auto rilevamento</div>
+        <div class="format-chip-grid">${renderChip("auto", "Auto", role)}</div>
+      </div>
+    `);
+  }
+
+  if (tab === "data") {
+    body.push(renderGroup("Dati e Testo", formatCatalog.data, role));
+  } else if (tab === "image") {
+    body.push(renderGroup("Immagini", formatCatalog.image, role));
+  } else if (tab === "media") {
+    body.push(renderGroup("Audio", formatCatalog.media.audio, role));
+    body.push(renderGroup("Video", formatCatalog.media.video, role));
+  }
+
+  list.innerHTML = body.join("");
+
+  for (const chip of list.querySelectorAll(".format-chip")) {
+    chip.addEventListener("click", () => {
+      const value = chip.dataset.value;
+      if (role === "source") {
+        selectedSourceFormat = value;
+        sourceFormatInput.value = value;
+      } else {
+        selectedTargetFormat = value;
+        targetFormatInput.value = value;
+      }
+      renderPicker(role);
+      updatePickerButton(role);
+      if (role === "source" && value !== "auto") {
+        const category = formatToCategory.get(value);
+        if (category) {
+          activeTabs.source = category;
+        }
+      }
+      openPicker(role, false);
+    });
+  }
+
+  updatePickerButton(role);
+}
+
+function updatePickerButton(role) {
+  const toggle = role === "source" ? sourceToggle : targetToggle;
+  if (!toggle) return;
+  toggle.textContent = toggleText(role);
+}
+
+function setActiveTab(role, tab) {
+  activeTabs[role] = tab;
+  const tabs = Array.from(document.querySelectorAll(`.format-tab[data-role="${role}"]`));
+  for (const button of tabs) {
+    const isActive = button.dataset.tab === tab;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+  }
+  renderPicker(role);
 }
 
 function detectExtFromFilename(name) {
   const parts = String(name || "").toLowerCase().split(".");
   if (parts.length < 2) return "";
   return parts.pop();
-}
-
-function bindFormatPickers() {
-  const { source: sourcePickers, target: targetPickers } = getCurrentPickers();
-  for (const picker of sourcePickers) {
-    picker.addEventListener("change", () => {
-      selectedSourceFormat = picker.value;
-      updateHiddenFormats();
-    });
-  }
-  for (const picker of targetPickers) {
-    picker.addEventListener("change", () => {
-      selectedTargetFormat = picker.value;
-      updateHiddenFormats();
-    });
-  }
 }
 
 async function blobToBase64(blob) {
@@ -308,25 +339,29 @@ function saveViaBrowserDownload(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-formatDropdownToggle?.addEventListener("click", toggleFormatDropdown);
-
-for (const tabButton of formatTabs) {
-  tabButton.addEventListener("click", () => setActiveTab(tabButton.dataset.tab));
-}
-
-fileInput.addEventListener("change", () => {
-  const file = fileInput.files[0];
+function initialSyncFromFileName() {
+  const file = fileInput.files?.[0];
   if (!file) return;
   const ext = detectExtFromFilename(file.name);
   if (!ext) return;
-  const category = formatToCategory.get(ext);
-  if (category) {
-    setActiveTab(category);
+  if (formatToCategory.has(ext)) {
+    activeTabs.source = formatToCategory.get(ext);
+    setActiveTab("source", activeTabs.source);
   }
-  selectedSourceFormat = ext;
-  if (selectRadioByValue(Array.from(document.querySelectorAll('input[name="source-pick"]')), ext)) {
-    updateHiddenFormats();
-  }
+}
+
+sourceToggle?.addEventListener("click", () => openPicker("source", sourcePanel?.classList.contains("hidden") ?? true));
+targetToggle?.addEventListener("click", () => openPicker("target", targetPanel?.classList.contains("hidden") ?? true));
+
+for (const tabButton of document.querySelectorAll('.format-tab[data-role="source"]')) {
+  tabButton.addEventListener("click", () => setActiveTab("source", tabButton.dataset.tab));
+}
+for (const tabButton of document.querySelectorAll('.format-tab[data-role="target"]')) {
+  tabButton.addEventListener("click", () => setActiveTab("target", tabButton.dataset.tab));
+}
+
+fileInput.addEventListener("change", () => {
+  initialSyncFromFileName();
 });
 
 locateBtn?.addEventListener("click", async () => {
@@ -341,8 +376,20 @@ locateBtn?.addEventListener("click", async () => {
   }
 });
 
-renderActiveTab();
-openFormatDropdown(false);
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const clickedInside = target.closest(".format-picker");
+  if (!clickedInside) {
+    openPicker("source", false);
+    openPicker("target", false);
+  }
+});
+
+updatePickerButton("source");
+updatePickerButton("target");
+renderPicker("source");
+renderPicker("target");
 resetAfterDownload();
 
 form.addEventListener("submit", async (event) => {
@@ -357,7 +404,7 @@ form.addEventListener("submit", async (event) => {
   }
 
   if (!targetFormatInput.value) {
-    setStatus("Seleziona il formato destinazione nella tabella.", "error");
+    setStatus("Seleziona il formato destinazione nel dropdown.", "error");
     return;
   }
 
@@ -377,7 +424,7 @@ form.addEventListener("submit", async (event) => {
         const payload = await response.json();
         if (payload.error) errText = payload.error;
       } catch {
-        // Keep fallback message.
+        // keep fallback message
       }
       throw new Error(errText);
     }

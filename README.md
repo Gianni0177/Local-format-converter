@@ -127,6 +127,7 @@ pyinstaller --noconsole --onefile --name FormatForgeDesktop --add-data "template
 - Il formato sorgente puo essere scelto manualmente o rilevato dall'estensione file.
 - Se esporti in CSV, i dati devono rappresentare una tabella (lista di oggetti).
 - Le conversioni audio/video usano FFmpeg tramite il pacchetto imageio-ffmpeg.
+- La selezione formati usa due dropdown separati, uno per sorgente e uno per destinazione, con chip organizzati per tab.
 - Dove finiscono i file convertiti:
    - Browser web: nella cartella Download configurata del browser (o percorso scelto dal browser).
    - Desktop app: in Downloads\\FormatForge, con pulsante Locate file? per aprire la cartella file.
