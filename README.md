@@ -75,6 +75,16 @@ Output:
 - FormatForgeDesktop.exe: avvia l'app in finestra desktop Windows (senza browser esterno).
 - In FormatForgeDesktop.exe la console e nascosta di default e puo essere mostrata/nascosta con CTRL+\\.
 
+### Personalizzazione icona e titolo finestra
+
+- Per usare un'icona personalizzata, aggiungi il file assets\\formatforge.ico.
+- Per cambiare il titolo della finestra desktop imposta APP_WINDOW_TITLE.
+
+```bash
+set APP_WINDOW_TITLE=Format Forge Pro
+FormatForgeDesktop.exe
+```
+
 ### Avvio web opzionale
 
 Puoi controllare l'apertura automatica del browser:
@@ -97,7 +107,6 @@ python app.py
 python -m venv .venv
 .venv\\Scripts\\activate
 pip install -r requirements.txt
-pyinstaller --noconsole --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
 pyinstaller --noconsole --onefile --name FormatForgeWeb --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
 pyinstaller --onefile --name FormatForgeDesktop --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 ```

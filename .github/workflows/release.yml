@@ -34,8 +34,14 @@ jobs:
           if (Test-Path build) { Remove-Item -Recurse -Force build }
           if (Test-Path FormatForgeWeb.spec) { Remove-Item -Force FormatForgeWeb.spec }
           if (Test-Path FormatForgeDesktop.spec) { Remove-Item -Force FormatForgeDesktop.spec }
-          pyinstaller --noconsole --onefile --name FormatForgeWeb --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
-          pyinstaller --onefile --name FormatForgeDesktop --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
+
+          $iconArg = @()
+          if (Test-Path "assets/formatforge.ico") {
+            $iconArg = @("--icon", "assets/formatforge.ico")
+          }
+
+          & pyinstaller --noconsole --onefile --name FormatForgeWeb @iconArg --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+          & pyinstaller --onefile --name FormatForgeDesktop @iconArg --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4

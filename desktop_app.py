@@ -52,6 +52,7 @@ class ServerThread(threading.Thread):
 def main() -> None:
     host = os.getenv("HOST", "127.0.0.1")
     preferred_port = int(os.getenv("PORT", "5000"))
+    app_title = os.getenv("APP_WINDOW_TITLE", "Format Forge Desktop")
     selected_port = pick_port(host, preferred_port)
 
     if selected_port != preferred_port:
@@ -65,7 +66,7 @@ def main() -> None:
     api = ConsoleApi()
     url = f"http://{host}:{selected_port}"
     window = webview.create_window(
-        "Format Forge",
+        app_title,
         url,
         js_api=api,
         min_size=(1000, 680),
