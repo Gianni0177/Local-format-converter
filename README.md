@@ -4,42 +4,12 @@ Web app per convertire file tra piu formati con una GUI semplice.
 
 ## Formati supportati
 
-### Dati/testo
-
-- JSON
-- CSV
-- YAML
-- TOML
-- XML
-- TXT
-- MD
-
-### Audio
-
-- MP3
-- WAV
-- FLAC
-- AAC
-- OGG
-- M4A
-
-### Video
-
-- MP4
-- MKV
-- MOV
-- AVI
-- WEBM
-
-### Immagini
-
-- PNG
-- JPG / JPEG
-- WEBP
-- BMP
-- GIF
-- TIFF
-- ICO
+| Categoria | Formati |
+| --- | --- |
+| Dati/testo | JSON, CSV, YAML, TOML, XML, TXT, MD |
+| Audio | MP3, WAV, FLAC, AAC, OGG, M4A |
+| Video | MP4, MKV, MOV, AVI, WEBM |
+| Immagini | PNG, JPG / JPEG, WEBP, BMP, GIF, TIFF, ICO |
 
 ## Regole conversione
 
