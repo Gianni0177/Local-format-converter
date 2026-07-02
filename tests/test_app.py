@@ -8,6 +8,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from app import app, parse_content
 
+APP_PATH = pathlib.Path(__file__).resolve().parents[1] / "app.py"
+
 
 def test_index_route_returns_ok():
     client = app.test_client()
@@ -36,7 +38,7 @@ def test_app_import_falls_back_to_tomli(monkeypatch):
 
     spec = importlib.util.spec_from_file_location(
         "app_with_tomli_fallback",
-        "/home/runner/work/Local-format-converter/Local-format-converter/app.py",
+        APP_PATH,
     )
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
