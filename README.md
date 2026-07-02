@@ -2,6 +2,19 @@
 
 Web app per convertire file tra piu formati con una GUI semplice.
 
+## Indice
+
+- [Formati supportati](#formati-supportati)
+- [Regole conversione](#regole-conversione)
+- [Avvio locale](#avvio-locale)
+- [Build EXE (Windows)](#build-exe-windows)
+  - [Metodo rapido](#metodo-rapido)
+  - [Differenze tra i due EXE](#differenze-tra-i-due-exe)
+  - [Personalizzazione icona e titolo finestra](#personalizzazione-icona-e-titolo-finestra)
+  - [Avvio web opzionale](#avvio-web-opzionale)
+  - [Metodo manuale](#metodo-manuale)
+- [Note](#note)
+
 ## Formati supportati
 
 | Categoria | Formati |
