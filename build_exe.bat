@@ -20,6 +20,11 @@ if exist FormatForgeDesktop.spec del /q FormatForgeDesktop.spec
 set "ICON_ARG="
 if exist "assets\formatforge.ico" set "ICON_ARG=--icon assets\formatforge.ico"
 
+if defined CODE_SIGN_CERT_BASE64 if defined CODE_SIGN_CERT_PASSWORD (
+  echo [INFO] Firma Authenticode attiva
+  powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\sign-executables.ps1" -Targets @("dist\FormatForgeWeb.exe","dist\FormatForgeDesktop.exe")
+)
+
 pyinstaller --noconsole --onefile --name FormatForgeWeb %ICON_ARG% --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
 pyinstaller --noconsole --onefile --name FormatForgeDesktop %ICON_ARG% --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 

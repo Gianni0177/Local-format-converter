@@ -43,6 +43,15 @@ jobs:
           & pyinstaller --noconsole --onefile --name FormatForgeWeb @iconArg --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
           & pyinstaller --noconsole --onefile --name FormatForgeDesktop @iconArg --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 
+      - name: Sign EXEs
+        if: ${{ secrets.CODE_SIGN_CERT_BASE64 != '' && secrets.CODE_SIGN_CERT_PASSWORD != '' }}
+        shell: pwsh
+        env:
+          CODE_SIGN_CERT_BASE64: ${{ secrets.CODE_SIGN_CERT_BASE64 }}
+          CODE_SIGN_CERT_PASSWORD: ${{ secrets.CODE_SIGN_CERT_PASSWORD }}
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\sign-executables.ps1 -Targets @("dist/FormatForgeWeb.exe", "dist/FormatForgeDesktop.exe")
+
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
