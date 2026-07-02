@@ -75,6 +75,63 @@ h1 {
   animation: slide-up 650ms ease-out;
 }
 
+.format-groups {
+  margin: 1.1rem 0 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.format-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.format-category {
+  border: 1px solid #d0d8d6;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.format-category h3 {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+  background: #eff6f3;
+  border-bottom: 1px solid #dbe4e0;
+}
+
+.format-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.format-table th,
+.format-table td {
+  border-bottom: 1px solid #edf2f0;
+  padding: 0.4rem 0.55rem;
+  text-align: left;
+}
+
+.format-table th:nth-child(2),
+.format-table th:nth-child(3),
+.format-table td:nth-child(2),
+.format-table td:nth-child(3) {
+  text-align: center;
+  width: 90px;
+}
+
+.format-table tr:last-child td {
+  border-bottom: none;
+}
+
+.format-table input[type="radio"] {
+  width: auto;
+  transform: scale(1.1);
+  accent-color: #1f8d73;
+}
+
 label {
   display: block;
   font-size: 0.9rem;
@@ -136,6 +193,40 @@ button:disabled {
 
 .status.ok {
   color: #0f5a45;
+}
+
+.after-download {
+  margin-top: 0.6rem;
+  padding: 0.8rem;
+  border: 1px solid #d0d8d6;
+  border-radius: 10px;
+  background: #f7faf8;
+}
+
+.after-download.hidden {
+  display: none;
+}
+
+#locate-btn {
+  width: auto;
+  padding: 0.5rem 0.9rem;
+  border-radius: 9px;
+  border: 1px solid #0d6955;
+  background: #0f7a62;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#locate-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.download-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.83rem;
+  color: #345049;
 }
 
 @keyframes slide-up {
