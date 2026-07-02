@@ -96,67 +96,6 @@ set APP_WINDOW_TITLE=Format Forge Pro
 FormatForgeDesktop.exe
 ```
 
-### Firma del binario per ridurre SmartScreen
-
-Per evitare o ridurre l'avviso SmartScreen in modo corretto, firma gli EXE con un certificato Authenticode.
-
-Nel workflow GitHub Actions il supporto e attivo se imposti questi secret del repository:
-
-- `CODE_SIGN_CERT_BASE64`: contenuto del file `.pfx` codificato in base64.
-- `CODE_SIGN_CERT_PASSWORD`: password del certificato.
-
-Con questi secret, il release workflow firma automaticamente `FormatForgeWeb.exe` e `FormatForgeDesktop.exe` prima di pubblicarli.
-
-Anche il build locale puo firmare gli EXE se esporti le stesse variabili ambiente prima di eseguire `build_exe.bat`.
-
-#### Procedura rapida
-
-1. Procurati un certificato di code signing valido e esportalo in formato `.pfx` con la chiave privata inclusa.
-2. Se vuoi solo provare il meccanismo in locale, puoi creare un certificato autofirmato di test, ma non eliminerai SmartScreen per una distribuzione pubblica.
-
-Esempio con PowerShell per creare un certificato autofirmato di test:
-
-```powershell
-$cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Format Forge Test" -CertStoreLocation "Cert:\CurrentUser\My"
-$password = Read-Host "Password per il PFX" -AsSecureString
-Export-PfxCertificate -Cert $cert -FilePath .\codesign-test.pfx -Password $password
-```
-
-Per convertire il `.pfx` in base64 da usare in GitHub Secrets:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\export-codesign-base64.ps1 -PfxPath .\codesign-test.pfx -CopyToClipboard
-```
-
-Se preferisci salvare il base64 in un file di testo:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\export-codesign-base64.ps1 -PfxPath .\codesign-test.pfx -OutFile .\codesign-test.txt
-```
-
-Per preparare i secret e aprire direttamente la pagina GitHub:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare-codesign-secrets.ps1 -PfxPath .\codesign-test.pfx -CopyToClipboard -OpenSecretsPage
-```
-
-Lo script mostra anche l'URL della pagina secret del repository, utile se vuoi incollare il base64 manualmente.
-
-3. In GitHub vai in `Settings` > `Secrets and variables` > `Actions` e crea questi secret:
-
-1. `CODE_SIGN_CERT_BASE64` con il contenuto base64 del file `.pfx`
-2. `CODE_SIGN_CERT_PASSWORD` con la password del PFX
-
-4. Se vuoi fare una prova locale, puoi impostare le stesse variabili ambiente prima di eseguire il batch:
-
-```bat
-set CODE_SIGN_CERT_BASE64=...
-set CODE_SIGN_CERT_PASSWORD=...
-build_exe.bat
-```
-
-5. Quando fai un tag di release, il workflow usera automaticamente quei secret per firmare `FormatForgeWeb.exe` e `FormatForgeDesktop.exe` prima della pubblicazione.
-
 ### Avvio web opzionale
 
 Puoi controllare l'apertura automatica del browser:
