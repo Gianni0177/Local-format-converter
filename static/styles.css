@@ -1,0 +1,160 @@
+:root {
+  --bg-ink: #0f1f1d;
+  --bg-deep: #102b26;
+  --mint: #9df2d5;
+  --teal: #2ec4a6;
+  --sun: #ffb703;
+  --paper: #f6f7f4;
+  --card: rgba(246, 247, 244, 0.92);
+  --danger: #b3261e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  background: radial-gradient(circle at 10% 10%, #1f4f44, transparent 35%),
+    radial-gradient(circle at 80% 20%, #d97706, transparent 30%),
+    linear-gradient(135deg, var(--bg-ink), var(--bg-deep));
+  min-height: 100vh;
+  color: #122220;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-image: linear-gradient(110deg, transparent 0 42%, rgba(255, 255, 255, 0.06) 42% 43%, transparent 43% 100%);
+  pointer-events: none;
+}
+
+.shell {
+  width: min(960px, 92vw);
+  margin: 3rem auto;
+  position: relative;
+  z-index: 1;
+}
+
+.hero {
+  color: var(--paper);
+  margin-bottom: 1.5rem;
+  animation: slide-up 500ms ease-out;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+  margin: 0 0 0.5rem;
+  color: var(--mint);
+}
+
+h1 {
+  font-family: "Instrument Serif", serif;
+  font-style: italic;
+  font-size: clamp(2.2rem, 6vw, 4.2rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.subtitle {
+  max-width: 65ch;
+  font-size: 1rem;
+  opacity: 0.95;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 20px;
+  padding: 1.4rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  animation: slide-up 650ms ease-out;
+}
+
+label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #d0d8d6;
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+}
+
+input,
+select {
+  background: #fff;
+  margin-bottom: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+button {
+  background: linear-gradient(120deg, var(--sun), #ffc64d);
+  border: none;
+  color: #1a1300;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(213, 136, 0, 0.35);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.status {
+  min-height: 1.25rem;
+  margin-top: 0.9rem;
+  font-size: 0.95rem;
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.status.ok {
+  color: #0f5a45;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    margin: 1.3rem auto;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Format Forge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">Web App di Conversione</p>
+        <h1>Format Forge</h1>
+        <p class="subtitle">
+          Carica un file, scegli il formato di uscita e scarica il risultato in pochi secondi.
+        </p>
+      </header>
+
+      <section class="panel">
+        <form id="convert-form">
+          <label for="file-input">File</label>
+          <input id="file-input" name="file" type="file" required />
+
+          <div class="grid">
+            <div>
+              <label for="source-format">Formato sorgente</label>
+              <select id="source-format" name="source_format">
+                <option value="auto">Rilevamento automatico</option>
+                {% for fmt in formats %}
+                <option value="{{ fmt }}">{{ fmt|upper }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label for="target-format">Formato destinazione</label>
+              <select id="target-format" name="target_format" required>
+                {% for fmt in formats %}
+                <option value="{{ fmt }}">{{ fmt|upper }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <button id="submit-btn" type="submit">Converti e Scarica</button>
+        </form>
+
+        <p id="status" class="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
