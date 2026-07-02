@@ -8,7 +8,10 @@ import pathlib
 import os
 import socket
 import subprocess
+import sys
 import tempfile
+import threading
+import webbrowser
 from dataclasses import dataclass
 from typing import Any
 
@@ -229,6 +232,7 @@ def convert_file():
 if __name__ == "__main__":
     host = os.getenv("HOST", "127.0.0.1")
     preferred_port = int(os.getenv("PORT", "5000"))
+    is_frozen_exe = bool(getattr(sys, "frozen", False))
 
     def pick_port(start_port: int) -> int:
         for port in range(start_port, start_port + 30):
@@ -242,4 +246,10 @@ if __name__ == "__main__":
     if selected_port != preferred_port:
         print(f"Porta {preferred_port} non disponibile. Avvio su {selected_port}.")
 
-    app.run(host=host, port=selected_port, debug=True)
+    if is_frozen_exe:
+        app_url = f"http://{host}:{selected_port}"
+        # Delay breve per permettere al server Flask di essere in ascolto.
+        threading.Timer(1.0, lambda: webbrowser.open(app_url)).start()
+        app.run(host=host, port=selected_port, debug=False, use_reloader=False)
+    else:
+        app.run(host=host, port=selected_port, debug=True)

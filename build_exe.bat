@@ -16,7 +16,7 @@ if exist dist rmdir /s /q dist
 if exist build rmdir /s /q build
 if exist app.spec del /q app.spec
 
-pyinstaller --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+pyinstaller --noconsole --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
 
 echo.
 echo [DONE] EXE disponibile in dist\FormatForge.exe

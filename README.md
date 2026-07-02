@@ -67,6 +67,8 @@ build_exe.bat
 Output:
 
 - dist\\FormatForge.exe
+- L'exe apre automaticamente il browser sulla pagina dell'app.
+- L'exe non mostra la console (build GUI).
 
 ### Metodo manuale
 
@@ -74,7 +76,7 @@ Output:
 python -m venv .venv
 .venv\\Scripts\\activate
 pip install -r requirements.txt
-pyinstaller --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+pyinstaller --noconsole --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
 ```
 
 ## Note

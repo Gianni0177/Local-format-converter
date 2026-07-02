@@ -33,7 +33,7 @@ jobs:
           if (Test-Path dist) { Remove-Item -Recurse -Force dist }
           if (Test-Path build) { Remove-Item -Recurse -Force build }
           if (Test-Path app.spec) { Remove-Item -Force app.spec }
-          pyinstaller --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+          pyinstaller --noconsole --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
