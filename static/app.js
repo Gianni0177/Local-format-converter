@@ -4,8 +4,10 @@ const submitBtn = document.getElementById("submit-btn");
 const fileInput = document.getElementById("file-input");
 const sourceFormatInput = document.getElementById("source-format");
 const targetFormatInput = document.getElementById("target-format");
-const sourcePickers = Array.from(document.querySelectorAll('input[name="source-pick"]'));
-const targetPickers = Array.from(document.querySelectorAll('input[name="target-pick"]'));
+const formatDropdownToggle = document.getElementById("format-dropdown-toggle");
+const formatDropdownPanel = document.getElementById("format-dropdown-panel");
+const formatTabs = Array.from(document.querySelectorAll(".format-tab"));
+const formatTableBody = document.getElementById("format-table-body");
 const afterDownloadBox = document.getElementById("after-download");
 const locateBtn = document.getElementById("locate-btn");
 const downloadNote = document.getElementById("download-note");
@@ -19,6 +21,32 @@ let logCursor = 0;
 let consoleOpen = false;
 let drawerHeight = 220;
 let lastSavedPath = "";
+let selectedSourceFormat = "auto";
+let selectedTargetFormat = "";
+
+const formatCategories = {
+  data: ["json", "csv", "yaml", "toml", "xml", "txt", "md"],
+  image: ["png", "jpg", "jpeg", "webp", "bmp", "gif", "tiff", "ico"],
+  media: [
+    { group: "Audio", formats: ["mp3", "wav", "flac", "aac", "ogg", "m4a"] },
+    { group: "Video", formats: ["mp4", "mkv", "mov", "avi", "webm"] },
+  ],
+};
+
+const categoryFormatLookup = new Map([
+  ["data", new Set(formatCategories.data)],
+  ["image", new Set(formatCategories.image)],
+  ["media", new Set([...formatCategories.media[0].formats, ...formatCategories.media[1].formats])],
+]);
+
+const formatToCategory = new Map();
+for (const [category, values] of categoryFormatLookup.entries()) {
+  for (const value of values) {
+    formatToCategory.set(value, category);
+  }
+}
+
+let activeTab = "data";
 
 function addConsoleLine(level, message, timestamp = null) {
   if (!isDesktopMode || !consoleOutput) return;
@@ -31,6 +59,72 @@ function addConsoleLine(level, message, timestamp = null) {
     consoleOutput.firstElementChild.remove();
   }
   consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+function normalizeFormatList(values) {
+  return values.filter((value) => Boolean(value));
+}
+
+function renderCategoryRows(category) {
+  const rows = [];
+  if (category === "media") {
+    for (const block of formatCategories.media) {
+      rows.push(`<tr class="format-group-row"><td colspan="3">${block.group}</td></tr>`);
+      for (const fmt of normalizeFormatList(block.formats)) {
+        rows.push(renderFormatRow(fmt));
+      }
+    }
+    return rows.join("");
+  }
+
+  const formats = formatCategories[category] || [];
+  return normalizeFormatList(formats).map((fmt) => renderFormatRow(fmt)).join("");
+}
+
+function renderFormatRow(fmt) {
+  const lower = String(fmt).toLowerCase();
+  return `
+    <tr>
+      <td>${lower.toUpperCase()}</td>
+      <td><input type="radio" name="source-pick" value="${lower}" ${selectedSourceFormat === lower ? "checked" : ""} /></td>
+      <td><input type="radio" name="target-pick" value="${lower}" ${selectedTargetFormat === lower ? "checked" : ""} /></td>
+    </tr>
+  `;
+}
+
+function renderActiveTab() {
+  if (!formatTableBody) return;
+  formatTableBody.innerHTML = renderCategoryRows(activeTab);
+  bindFormatPickers();
+  updateHiddenFormats();
+}
+
+function setActiveTab(tab) {
+  activeTab = tab;
+  for (const button of formatTabs) {
+    const isActive = button.dataset.tab === tab;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+  }
+  renderActiveTab();
+}
+
+function openFormatDropdown(open) {
+  if (!formatDropdownPanel || !formatDropdownToggle) return;
+  formatDropdownPanel.classList.toggle("hidden", !open);
+  formatDropdownToggle.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function toggleFormatDropdown() {
+  const isHidden = formatDropdownPanel.classList.contains("hidden");
+  openFormatDropdown(isHidden);
+}
+
+function getCurrentPickers() {
+  return {
+    source: Array.from(document.querySelectorAll('input[name="source-pick"]')),
+    target: Array.from(document.querySelectorAll('input[name="target-pick"]')),
+  };
 }
 
 function setConsoleOpen(open) {
@@ -150,16 +244,30 @@ function selectRadioByValue(radios, value) {
 }
 
 function updateHiddenFormats() {
-  const sourceSelected = sourcePickers.find((radio) => radio.checked);
-  const targetSelected = targetPickers.find((radio) => radio.checked);
-  sourceFormatInput.value = sourceSelected ? sourceSelected.value : "auto";
-  targetFormatInput.value = targetSelected ? targetSelected.value : "";
+  sourceFormatInput.value = selectedSourceFormat || "auto";
+  targetFormatInput.value = selectedTargetFormat || "";
 }
 
 function detectExtFromFilename(name) {
   const parts = String(name || "").toLowerCase().split(".");
   if (parts.length < 2) return "";
   return parts.pop();
+}
+
+function bindFormatPickers() {
+  const { source: sourcePickers, target: targetPickers } = getCurrentPickers();
+  for (const picker of sourcePickers) {
+    picker.addEventListener("change", () => {
+      selectedSourceFormat = picker.value;
+      updateHiddenFormats();
+    });
+  }
+  for (const picker of targetPickers) {
+    picker.addEventListener("change", () => {
+      selectedTargetFormat = picker.value;
+      updateHiddenFormats();
+    });
+  }
 }
 
 async function blobToBase64(blob) {
@@ -200,11 +308,10 @@ function saveViaBrowserDownload(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-for (const picker of sourcePickers) {
-  picker.addEventListener("change", updateHiddenFormats);
-}
-for (const picker of targetPickers) {
-  picker.addEventListener("change", updateHiddenFormats);
+formatDropdownToggle?.addEventListener("click", toggleFormatDropdown);
+
+for (const tabButton of formatTabs) {
+  tabButton.addEventListener("click", () => setActiveTab(tabButton.dataset.tab));
 }
 
 fileInput.addEventListener("change", () => {
@@ -212,7 +319,12 @@ fileInput.addEventListener("change", () => {
   if (!file) return;
   const ext = detectExtFromFilename(file.name);
   if (!ext) return;
-  if (selectRadioByValue(sourcePickers, ext)) {
+  const category = formatToCategory.get(ext);
+  if (category) {
+    setActiveTab(category);
+  }
+  selectedSourceFormat = ext;
+  if (selectRadioByValue(Array.from(document.querySelectorAll('input[name="source-pick"]')), ext)) {
     updateHiddenFormats();
   }
 });
@@ -229,7 +341,8 @@ locateBtn?.addEventListener("click", async () => {
   }
 });
 
-updateHiddenFormats();
+renderActiveTab();
+openFormatDropdown(false);
 resetAfterDownload();
 
 form.addEventListener("submit", async (event) => {

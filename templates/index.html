@@ -30,87 +30,26 @@
           <input id="source-format" name="source_format" type="hidden" value="auto" />
           <input id="target-format" name="target_format" type="hidden" value="" />
 
-          <div class="format-groups">
-            <h2 class="format-title">Selezione Formati</h2>
+          <div class="format-dropdown">
+            <button id="format-dropdown-toggle" class="format-dropdown-toggle" type="button" aria-expanded="false" aria-controls="format-dropdown-panel">
+              Seleziona Formati
+            </button>
 
-            <div class="format-category">
-              <h3>Dati e Testo</h3>
-              <table class="format-table">
-                <thead>
-                  <tr><th>Formato</th><th>Sorgente</th><th>Destinazione</th></tr>
-                </thead>
-                <tbody>
-                  {% for fmt in ["json", "csv", "yaml", "toml", "xml", "txt", "md"] %}
-                  {% if fmt in formats %}
-                  <tr>
-                    <td>{{ fmt|upper }}</td>
-                    <td><input type="radio" name="source-pick" value="{{ fmt }}" /></td>
-                    <td><input type="radio" name="target-pick" value="{{ fmt }}" /></td>
-                  </tr>
-                  {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
+            <div id="format-dropdown-panel" class="format-dropdown-panel hidden">
+              <div class="format-tabs" role="tablist" aria-label="Categorie formati">
+                <button type="button" class="format-tab active" data-tab="data" aria-selected="true">Dati e Testo</button>
+                <button type="button" class="format-tab" data-tab="image" aria-selected="false">Immagini</button>
+                <button type="button" class="format-tab" data-tab="media" aria-selected="false">Media</button>
+              </div>
 
-            <div class="format-category">
-              <h3>Immagini</h3>
-              <table class="format-table">
-                <thead>
-                  <tr><th>Formato</th><th>Sorgente</th><th>Destinazione</th></tr>
-                </thead>
-                <tbody>
-                  {% for fmt in ["png", "jpg", "jpeg", "webp", "bmp", "gif", "tiff", "ico"] %}
-                  {% if fmt in formats %}
-                  <tr>
-                    <td>{{ fmt|upper }}</td>
-                    <td><input type="radio" name="source-pick" value="{{ fmt }}" /></td>
-                    <td><input type="radio" name="target-pick" value="{{ fmt }}" /></td>
-                  </tr>
-                  {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="format-category">
-              <h3>Audio</h3>
-              <table class="format-table">
-                <thead>
-                  <tr><th>Formato</th><th>Sorgente</th><th>Destinazione</th></tr>
-                </thead>
-                <tbody>
-                  {% for fmt in ["mp3", "wav", "flac", "aac", "ogg", "m4a"] %}
-                  {% if fmt in formats %}
-                  <tr>
-                    <td>{{ fmt|upper }}</td>
-                    <td><input type="radio" name="source-pick" value="{{ fmt }}" /></td>
-                    <td><input type="radio" name="target-pick" value="{{ fmt }}" /></td>
-                  </tr>
-                  {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="format-category">
-              <h3>Video</h3>
-              <table class="format-table">
-                <thead>
-                  <tr><th>Formato</th><th>Sorgente</th><th>Destinazione</th></tr>
-                </thead>
-                <tbody>
-                  {% for fmt in ["mp4", "mkv", "mov", "avi", "webm"] %}
-                  {% if fmt in formats %}
-                  <tr>
-                    <td>{{ fmt|upper }}</td>
-                    <td><input type="radio" name="source-pick" value="{{ fmt }}" /></td>
-                    <td><input type="radio" name="target-pick" value="{{ fmt }}" /></td>
-                  </tr>
-                  {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
+              <div class="format-table-shell">
+                <table class="format-table">
+                  <thead>
+                    <tr><th>Formato</th><th>Sorgente</th><th>Destinazione</th></tr>
+                  </thead>
+                  <tbody id="format-table-body"></tbody>
+                </table>
+              </div>
             </div>
           </div>
 
