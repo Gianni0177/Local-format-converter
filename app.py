@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 import json
@@ -45,6 +46,15 @@ class ConversionResult:
 
 class ConversionError(Exception):
     pass
+
+
+def pick_port(host: str, start_port: int, attempts: int = 30) -> int:
+    for port in range(start_port, start_port + attempts):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if sock.connect_ex((host, port)) != 0:
+                return port
+    return start_port
 
 
 def detect_format(filename: str) -> str:
@@ -230,26 +240,38 @@ def convert_file():
 
 
 if __name__ == "__main__":
+    is_frozen_exe = bool(getattr(sys, "frozen", False))
     host = os.getenv("HOST", "127.0.0.1")
     preferred_port = int(os.getenv("PORT", "5000"))
-    is_frozen_exe = bool(getattr(sys, "frozen", False))
 
-    def pick_port(start_port: int) -> int:
-        for port in range(start_port, start_port + 30):
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                if sock.connect_ex((host, port)) != 0:
-                    return port
-        return start_port
+    auto_open_env = os.getenv("AUTO_OPEN_BROWSER")
+    default_auto_open = is_frozen_exe
+    if auto_open_env is not None:
+        default_auto_open = auto_open_env.lower() in {"1", "true", "yes", "on"}
 
-    selected_port = pick_port(preferred_port)
-    if selected_port != preferred_port:
-        print(f"Porta {preferred_port} non disponibile. Avvio su {selected_port}.")
+    parser = argparse.ArgumentParser(description="Format Forge")
+    parser.add_argument("--host", default=host)
+    parser.add_argument("--port", type=int, default=preferred_port)
+    parser.add_argument("--debug", action="store_true", default=not is_frozen_exe)
+    parser.add_argument("--no-debug", action="store_false", dest="debug")
+    browser_group = parser.add_mutually_exclusive_group()
+    browser_group.add_argument("--open-browser", action="store_true", dest="open_browser")
+    browser_group.add_argument("--no-open-browser", action="store_false", dest="open_browser")
+    parser.set_defaults(open_browser=default_auto_open)
+    args = parser.parse_args()
 
-    if is_frozen_exe:
-        app_url = f"http://{host}:{selected_port}"
+    selected_port = pick_port(args.host, args.port)
+    if selected_port != args.port:
+        print(f"Porta {args.port} non disponibile. Avvio su {selected_port}.")
+
+    if args.open_browser:
+        app_url = f"http://{args.host}:{selected_port}"
         # Delay breve per permettere al server Flask di essere in ascolto.
         threading.Timer(1.0, lambda: webbrowser.open(app_url)).start()
-        app.run(host=host, port=selected_port, debug=False, use_reloader=False)
-    else:
-        app.run(host=host, port=selected_port, debug=True)
+
+    app.run(
+        host=args.host,
+        port=selected_port,
+        debug=args.debug,
+        use_reloader=(args.debug and not is_frozen_exe),
+    )

@@ -14,10 +14,12 @@ python -m pip install -r requirements.txt
 
 if exist dist rmdir /s /q dist
 if exist build rmdir /s /q build
-if exist app.spec del /q app.spec
+if exist FormatForgeWeb.spec del /q FormatForgeWeb.spec
+if exist FormatForgeDesktop.spec del /q FormatForgeDesktop.spec
 
-pyinstaller --noconsole --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+pyinstaller --noconsole --onefile --name FormatForgeWeb --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+pyinstaller --onefile --name FormatForgeDesktop --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 
 echo.
-echo [DONE] EXE disponibile in dist\FormatForge.exe
+echo [DONE] EXE disponibili in dist\FormatForgeWeb.exe e dist\FormatForgeDesktop.exe
 endlocal

@@ -32,19 +32,25 @@ jobs:
         run: |
           if (Test-Path dist) { Remove-Item -Recurse -Force dist }
           if (Test-Path build) { Remove-Item -Recurse -Force build }
-          if (Test-Path app.spec) { Remove-Item -Force app.spec }
-          pyinstaller --noconsole --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+          if (Test-Path FormatForgeWeb.spec) { Remove-Item -Force FormatForgeWeb.spec }
+          if (Test-Path FormatForgeDesktop.spec) { Remove-Item -Force FormatForgeDesktop.spec }
+          pyinstaller --noconsole --onefile --name FormatForgeWeb --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+          pyinstaller --onefile --name FormatForgeDesktop --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: FormatForge-${{ github.ref_name }}
-          path: dist/FormatForge.exe
+          path: |
+            dist/FormatForgeWeb.exe
+            dist/FormatForgeDesktop.exe
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/FormatForge.exe
+          files: |
+            dist/FormatForgeWeb.exe
+            dist/FormatForgeDesktop.exe
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -66,9 +66,30 @@ build_exe.bat
 
 Output:
 
-- dist\\FormatForge.exe
-- L'exe apre automaticamente il browser sulla pagina dell'app.
-- L'exe non mostra la console (build GUI).
+- dist\\FormatForgeWeb.exe
+- dist\\FormatForgeDesktop.exe
+
+### Differenze tra i due EXE
+
+- FormatForgeWeb.exe: avvia il server locale in background e apre il browser di sistema.
+- FormatForgeDesktop.exe: avvia l'app in finestra desktop Windows (senza browser esterno).
+- In FormatForgeDesktop.exe la console e nascosta di default e puo essere mostrata/nascosta con CTRL+\\.
+
+### Avvio web opzionale
+
+Puoi controllare l'apertura automatica del browser:
+
+```bash
+python app.py --open-browser
+python app.py --no-open-browser
+```
+
+Oppure via variabile ambiente:
+
+```bash
+set AUTO_OPEN_BROWSER=0
+python app.py
+```
 
 ### Metodo manuale
 
@@ -77,6 +98,8 @@ python -m venv .venv
 .venv\\Scripts\\activate
 pip install -r requirements.txt
 pyinstaller --noconsole --onefile --name FormatForge --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+pyinstaller --noconsole --onefile --name FormatForgeWeb --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
+pyinstaller --onefile --name FormatForgeDesktop --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
 ```
 
 ## Note
