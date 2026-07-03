@@ -17,7 +17,7 @@
 
 - [📦 Formati supportati](#-formati-supportati)
 - [📐 Regole conversione](#-regole-conversione)
-- [🚀 Avvio locale](#-avvio-locale)
+- [▶️ Avvio locale](#-avvio-locale)
 - [🖥️ Build EXE (Windows)](#%EF%B8%8F-build-exe-windows)
   - [⚡ Metodo rapido](#-metodo-rapido)
   - [🔍 Differenze tra i due EXE](#-differenze-tra-i-due-exe)
@@ -51,7 +51,7 @@
 
 ---
 
-## 🚀 Avvio locale
+## ▶️ Avvio locale
 
 **1.** Crea e attiva un ambiente virtuale Python:
 
@@ -74,13 +74,13 @@ python app.py
 ```
 
 **4.** Apri il browser all'URL mostrato in console.
-> 💡 La porta viene auto-selezionata se la 5000 è già occupata.
+> ℹ️ La porta viene auto-selezionata se la 5000 è già occupata.
 
 ---
 
 ## 🖥️ Build EXE (Windows)
 
-### ⚡ Metodo rapido
+### Metodo rapido
 
 ```bat
 build_exe.bat
@@ -95,7 +95,7 @@ Al termine troverai nella cartella `dist\`:
 
 ---
 
-### 🔍 Differenze tra i due EXE
+### Differenze tra i due EXE
 
 - **`FormatForgeWeb.exe`** — avvia un server locale in background e apre il browser di sistema.
 - **`FormatForgeDesktop.exe`** — l'app gira in una finestra desktop Windows autonoma.
@@ -104,7 +104,7 @@ Al termine troverai nella cartella `dist\`:
 
 ---
 
-### 🎨 Personalizzazione icona e titolo finestra
+### Personalizzazione icona e titolo finestra
 
 - Per usare un'icona personalizzata, aggiungi il file `assets\formatforge.ico`.
 - Per cambiare il titolo della finestra desktop, imposta la variabile `APP_WINDOW_TITLE`:
@@ -161,10 +161,10 @@ pyinstaller --noconsole --onefile --name FormatForgeDesktop \
 
 ## 📝 Note
 
-> - 🔎 Il formato sorgente può essere scelto manualmente o rilevato automaticamente dall'estensione file.
-> - 📊 Se esporti in CSV, i dati devono rappresentare una tabella (lista di oggetti).
-> - 🎞️ Le conversioni audio/video usano **FFmpeg** tramite il pacchetto `imageio-ffmpeg`.
-> - 🗂️ La selezione formati usa due dropdown separati (sorgente e destinazione) con chip organizzati per tab.
+>  Il formato sorgente può essere scelto manualmente o rilevato automaticamente dall'estensione file.
+>  Se esporti in CSV, i dati devono rappresentare una tabella (lista di oggetti).
+>  Le conversioni audio/video usano **FFmpeg** tramite il pacchetto `imageio-ffmpeg`.
+>  La selezione formati usa due dropdown separati (sorgente e destinazione) con chip organizzati per tab.
 
 ### 📁 Dove finiscono i file convertiti?
 
