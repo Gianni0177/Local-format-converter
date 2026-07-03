@@ -1,116 +1,180 @@
-# Format Forge
+<div align="center">
 
-Web app per convertire file tra piu formati con una GUI semplice.
+# 🔨 Format Forge
 
-## Indice
+**Converti file tra decine di formati — direttamente dal browser o come app desktop Windows.**
 
-- [Formati supportati](#formati-supportati)
-- [Regole conversione](#regole-conversione)
-- [Avvio locale](#avvio-locale)
-- [Build EXE (Windows)](#build-exe-windows)
-  - [Metodo rapido](#metodo-rapido)
-  - [Differenze tra i due EXE](#differenze-tra-i-due-exe)
-  - [Personalizzazione icona e titolo finestra](#personalizzazione-icona-e-titolo-finestra)
-  - [Avvio web opzionale](#avvio-web-opzionale)
-  - [Metodo manuale](#metodo-manuale)
-- [Note](#note)
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-web%20app-lightgrey?logo=flask)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Web-informational)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-## Formati supportati
+</div>
+
+---
+
+## 📋 Indice
+
+- [📦 Formati supportati](#-formati-supportati)
+- [📐 Regole conversione](#-regole-conversione)
+- [🚀 Avvio locale](#-avvio-locale)
+- [🖥️ Build EXE (Windows)](#%EF%B8%8F-build-exe-windows)
+  - [⚡ Metodo rapido](#-metodo-rapido)
+  - [🔍 Differenze tra i due EXE](#-differenze-tra-i-due-exe)
+  - [🎨 Personalizzazione icona e titolo finestra](#-personalizzazione-icona-e-titolo-finestra)
+  - [🌐 Avvio web opzionale](#-avvio-web-opzionale)
+  - [🔧 Metodo manuale](#-metodo-manuale)
+- [📝 Note](#-note)
+
+---
+
+## 📦 Formati supportati
 
 | Categoria | Formati |
-| --- | --- |
-| Dati/testo | JSON, CSV, YAML, TOML, XML, TXT, MD |
-| Audio | MP3, WAV, FLAC, AAC, OGG, M4A |
-| Video | MP4, MKV, MOV, AVI, WEBM |
-| Immagini | PNG, JPG / JPEG, WEBP, BMP, GIF, TIFF, ICO |
+|:---------:|:--------|
+| 🗂️ **Dati/testo** | `JSON` `CSV` `YAML` `TOML` `XML` `TXT` `MD` |
+| 🎵 **Audio** | `MP3` `WAV` `FLAC` `AAC` `OGG` `M4A` |
+| 🎬 **Video** | `MP4` `MKV` `MOV` `AVI` `WEBM` |
+| 🖼️ **Immagini** | `PNG` `JPG/JPEG` `WEBP` `BMP` `GIF` `TIFF` `ICO` |
 
-## Regole conversione
+---
 
-- Dati/testo: conversioni tra i formati strutturati elencati sopra.
-- Media: consentite audio -> audio, video -> video e video -> audio.
-- Immagini: consentite conversioni immagine -> immagine.
-- Non sono consentite conversioni miste tra binary (audio/video/immagini) e testo/strutturati.
+## 📐 Regole conversione
 
-## Avvio locale
+| Tipo | Conversioni consentite |
+|:----:|:----------------------|
+| 🗂️ Dati/testo | Qualsiasi formato strutturato → qualsiasi altro |
+| 🎵 Audio | Audio → Audio |
+| 🎬 Video | Video → Video &nbsp;·&nbsp; Video → Audio |
+| 🖼️ Immagini | Immagine → Immagine |
+| ❌ Non consentito | Binario (audio/video/immagini) ↔ Testo/strutturati |
 
-1. Crea e attiva un ambiente virtuale Python.
-2. Installa le dipendenze:
+---
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+## 🚀 Avvio locale
 
-3. Avvia l'app:
+**1.** Crea e attiva un ambiente virtuale Python:
 
-   ```bash
-   python app.py
-   ```
+```bash
+python -m venv .venv
+.venv\Scripts\activate      # Windows
+source .venv/bin/activate   # macOS / Linux
+```
 
-4. Apri il browser sull'URL mostrato in console (porta auto-selezionata se 5000 non disponibile).
+**2.** Installa le dipendenze:
 
-## Build EXE (Windows)
+```bash
+pip install -r requirements.txt
+```
 
-### Metodo rapido
+**3.** Avvia l'app:
 
-Esegui:
+```bash
+python app.py
+```
+
+**4.** Apri il browser all'URL mostrato in console.
+> 💡 La porta viene auto-selezionata se la 5000 è già occupata.
+
+---
+
+## 🖥️ Build EXE (Windows)
+
+### ⚡ Metodo rapido
 
 ```bat
 build_exe.bat
 ```
 
-Output:
+Al termine troverai nella cartella `dist\`:
 
-- dist\\FormatForgeWeb.exe
-- dist\\FormatForgeDesktop.exe
+| File | Descrizione |
+|------|-------------|
+| `FormatForgeWeb.exe` | Avvia il server locale e apre il browser di sistema |
+| `FormatForgeDesktop.exe` | Avvia l'app in finestra desktop nativa (senza browser esterno) |
 
-### Differenze tra i due EXE
+---
 
-- FormatForgeWeb.exe: avvia il server locale in background e apre il browser di sistema.
-- FormatForgeDesktop.exe: avvia l'app in finestra desktop Windows (senza browser esterno).
-- In FormatForgeDesktop.exe la console e integrata nell'app: pannello in basso, nascosto di default, apribile con CTRL+\\ e ridimensionabile trascinando il bordo superiore.
+### 🔍 Differenze tra i due EXE
 
-### Personalizzazione icona e titolo finestra
+- **`FormatForgeWeb.exe`** — avvia un server locale in background e apre il browser di sistema.
+- **`FormatForgeDesktop.exe`** — l'app gira in una finestra desktop Windows autonoma.
+  - La console è integrata nell'app: pannello in basso, nascosto di default.
+  - Apribile con <kbd>CTRL</kbd>+<kbd>\\</kbd> e ridimensionabile trascinando il bordo superiore.
 
-- Per usare un'icona personalizzata, aggiungi il file assets\\formatforge.ico.
-- Per cambiare il titolo della finestra desktop imposta APP_WINDOW_TITLE.
+---
 
-```bash
+### 🎨 Personalizzazione icona e titolo finestra
+
+- Per usare un'icona personalizzata, aggiungi il file `assets\formatforge.ico`.
+- Per cambiare il titolo della finestra desktop, imposta la variabile `APP_WINDOW_TITLE`:
+
+```bat
 set APP_WINDOW_TITLE=Format Forge Pro
 FormatForgeDesktop.exe
 ```
 
-### Avvio web opzionale
+---
 
-Puoi controllare l'apertura automatica del browser:
+### 🌐 Avvio web opzionale
+
+Controlla l'apertura automatica del browser tramite flag:
 
 ```bash
 python app.py --open-browser
 python app.py --no-open-browser
 ```
 
-Oppure via variabile ambiente:
+Oppure tramite variabile d'ambiente:
 
 ```bash
 set AUTO_OPEN_BROWSER=0
 python app.py
 ```
 
-### Metodo manuale
+---
+
+### 🔧 Metodo manuale
 
 ```bash
 python -m venv .venv
-.venv\\Scripts\\activate
+.venv\Scripts\activate
 pip install -r requirements.txt
-pyinstaller --noconsole --onefile --name FormatForgeWeb --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg app.py
-pyinstaller --noconsole --onefile --name FormatForgeDesktop --add-data "templates;templates" --add-data "static;static" --collect-all imageio_ffmpeg --collect-all webview desktop_app.py
+
+# EXE Web
+pyinstaller --noconsole --onefile --name FormatForgeWeb \
+  --add-data "templates;templates" \
+  --add-data "static;static" \
+  --collect-all imageio_ffmpeg \
+  app.py
+
+# EXE Desktop
+pyinstaller --noconsole --onefile --name FormatForgeDesktop \
+  --add-data "templates;templates" \
+  --add-data "static;static" \
+  --collect-all imageio_ffmpeg \
+  --collect-all webview \
+  desktop_app.py
 ```
 
-## Note
+---
 
-- Il formato sorgente puo essere scelto manualmente o rilevato dall'estensione file.
-- Se esporti in CSV, i dati devono rappresentare una tabella (lista di oggetti).
-- Le conversioni audio/video usano FFmpeg tramite il pacchetto imageio-ffmpeg.
-- La selezione formati usa due dropdown separati, uno per sorgente e uno per destinazione, con chip organizzati per tab.
-- Dove finiscono i file convertiti:
-   - Browser web: nella cartella Download configurata del browser (o percorso scelto dal browser).
-   - Desktop app: in Downloads\\FormatForge, con pulsante Locate file? per aprire la cartella file.
+## 📝 Note
+
+> - 🔎 Il formato sorgente può essere scelto manualmente o rilevato automaticamente dall'estensione file.
+> - 📊 Se esporti in CSV, i dati devono rappresentare una tabella (lista di oggetti).
+> - 🎞️ Le conversioni audio/video usano **FFmpeg** tramite il pacchetto `imageio-ffmpeg`.
+> - 🗂️ La selezione formati usa due dropdown separati (sorgente e destinazione) con chip organizzati per tab.
+
+### 📁 Dove finiscono i file convertiti?
+
+| Modalità | Percorso |
+|----------|---------|
+| 🌐 **Browser web** | Cartella `Download` configurata nel browser |
+| 🖥️ **Desktop app** | `Downloads\FormatForge` — con pulsante **Locate file?** per aprire la cartella |
+
+---
+
+<div align="center">
+  <sub>Made with ❤️ using Python & Flask</sub>
+</div>
