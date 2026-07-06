@@ -70,3 +70,48 @@ def test_image_conversion_png_to_webp():
 
     assert response.status_code == 200
     assert response.headers.get("content-disposition", "").lower().find("sample_converted.webp") != -1
+
+
+def test_batch_conversion_same_type_returns_zip():
+    first = io.BytesIO(b'{"name": "alpha"}')
+    second = io.BytesIO(b'{"name": "beta"}')
+
+    client = app.test_client()
+    response = client.post(
+        "/api/convert",
+        data={
+            "source_format": "auto",
+            "target_format": "yaml",
+            "file": [
+                (first, "a.json"),
+                (second, "b.json"),
+            ],
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+    assert response.mimetype == "application/zip"
+    assert response.data[:4] == b"PK\x03\x04"
+
+
+def test_batch_conversion_mixed_type_returns_400():
+    json_file = io.BytesIO(b'{"name": "alpha"}')
+    yaml_file = io.BytesIO(b"name: beta\n")
+
+    client = app.test_client()
+    response = client.post(
+        "/api/convert",
+        data={
+            "source_format": "auto",
+            "target_format": "toml",
+            "file": [
+                (json_file, "a.json"),
+                (yaml_file, "b.yaml"),
+            ],
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert b"stesso formato sorgente" in response.data

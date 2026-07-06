@@ -1,7 +1,9 @@
 const form = document.getElementById("convert-form");
 const statusEl = document.getElementById("status");
 const submitBtn = document.getElementById("submit-btn");
+const uploadModeSelect = document.getElementById("upload-mode");
 const fileInput = document.getElementById("file-input");
+const fileHint = document.getElementById("file-hint");
 const sourceFormatInput = document.getElementById("source-format");
 const targetFormatInput = document.getElementById("target-format");
 const sourceToggle = document.getElementById("source-format-toggle");
@@ -301,6 +303,74 @@ function detectExtFromFilename(name) {
   return parts.pop();
 }
 
+function listSelectedFiles() {
+  return Array.from(fileInput.files || []);
+}
+
+function updateUploadModeControls() {
+  const mode = uploadModeSelect?.value || "single";
+  const isMulti = mode === "multiple" || mode === "folder";
+
+  fileInput.multiple = isMulti;
+
+  if (mode === "folder") {
+    fileInput.setAttribute("webkitdirectory", "");
+    fileInput.setAttribute("directory", "");
+    if (fileHint) {
+      fileHint.textContent = "Seleziona una cartella: verranno caricati i file interni (stesso tipo).";
+    }
+  } else {
+    fileInput.removeAttribute("webkitdirectory");
+    fileInput.removeAttribute("directory");
+    if (fileHint) {
+      fileHint.textContent =
+        mode === "multiple"
+          ? "Seleziona più file con la stessa estensione (es. tutti .json)."
+          : "Puoi caricare un solo file.";
+    }
+  }
+
+  fileInput.value = "";
+}
+
+function validateSelectionByMode(files) {
+  const mode = uploadModeSelect?.value || "single";
+  if (!files.length) {
+    return { ok: false, message: "Seleziona almeno un file prima di convertire." };
+  }
+  if (mode === "single" && files.length > 1) {
+    return { ok: false, message: "In modalita file singolo puoi selezionare un solo file." };
+  }
+
+  if (mode !== "single") {
+    const extSet = new Set();
+    for (const file of files) {
+      const ext = detectExtFromFilename(file.name);
+      if (!ext) {
+        return { ok: false, message: "Ogni file deve avere un'estensione valida." };
+      }
+      extSet.add(ext);
+    }
+    if (extSet.size > 1) {
+      return { ok: false, message: "Nel caricamento multiplo/cartella i file devono essere dello stesso tipo." };
+    }
+  }
+
+  return { ok: true, message: "" };
+}
+
+function buildConversionFormData(files) {
+  const data = new FormData();
+  data.set("source_format", sourceFormatInput.value || "auto");
+  data.set("target_format", targetFormatInput.value || "");
+
+  for (const file of files) {
+    const relativeName = file.webkitRelativePath || file.name;
+    data.append("file", file, relativeName);
+  }
+  return data;
+}
+
 async function blobToBase64(blob) {
   const buffer = await blob.arrayBuffer();
   const bytes = new Uint8Array(buffer);
@@ -360,8 +430,17 @@ for (const tabButton of document.querySelectorAll('.format-tab[data-role="target
   tabButton.addEventListener("click", () => setActiveTab("target", tabButton.dataset.tab));
 }
 
+uploadModeSelect?.addEventListener("change", updateUploadModeControls);
+
 fileInput.addEventListener("change", () => {
   initialSyncFromFileName();
+  const files = listSelectedFiles();
+  const validation = validateSelectionByMode(files);
+  if (!validation.ok && files.length) {
+    setStatus(validation.message, "error");
+  } else if (files.length > 1) {
+    setStatus(`Selezionati ${files.length} file.`, "");
+  }
 });
 
 locateBtn?.addEventListener("click", async () => {
@@ -391,15 +470,16 @@ updatePickerButton("target");
 renderPicker("source");
 renderPicker("target");
 resetAfterDownload();
+updateUploadModeControls();
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const data = new FormData(form);
-  const file = data.get("file");
+  const files = listSelectedFiles();
+  const validation = validateSelectionByMode(files);
 
-  if (!file || !file.name) {
-    setStatus("Seleziona un file prima di convertire.", "error");
+  if (!validation.ok) {
+    setStatus(validation.message, "error");
     return;
   }
 
@@ -408,9 +488,11 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  const data = buildConversionFormData(files);
+
   submitBtn.disabled = true;
   resetAfterDownload();
-  setStatus("Conversione in corso...", "");
+  setStatus(files.length > 1 ? `Conversione batch in corso (${files.length} file)...` : "Conversione in corso...", "");
 
   try {
     const response = await fetch("/api/convert", {
@@ -437,11 +519,12 @@ form.addEventListener("submit", async (event) => {
 
     if (runningInDesktopBridge) {
       lastSavedPath = await saveViaDesktopBridge(blob, filename);
-      setStatus("Conversione completata. File salvato in Downloads/FormatForge.", "ok");
+      const doneMessage = files.length > 1 ? "Conversione batch completata. Archivio ZIP salvato in Downloads/FormatForge." : "Conversione completata. File salvato in Downloads/FormatForge.";
+      setStatus(doneMessage, "ok");
       showAfterDownload(Boolean(lastSavedPath), lastSavedPath || "File salvato.");
     } else {
       saveViaBrowserDownload(blob, filename);
-      setStatus("Conversione completata. Download avviato.", "ok");
+      setStatus(files.length > 1 ? "Conversione batch completata. Download ZIP avviato." : "Conversione completata. Download avviato.", "ok");
       showAfterDownload(
         false,
         "Nel browser i file vengono salvati nella cartella download configurata (o scelta manualmente).",

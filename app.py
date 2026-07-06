@@ -16,6 +16,7 @@ import sys
 import tempfile
 import threading
 import webbrowser
+import zipfile
 from dataclasses import dataclass
 from typing import Any
 
@@ -55,6 +56,17 @@ class ConversionResult:
 
 class ConversionError(Exception):
     pass
+
+
+def _normalize_rel_name(filename: str) -> str:
+    sanitized = str(filename or "file").replace("\\", "/")
+    pure = pathlib.PurePosixPath(sanitized)
+    if pure.is_absolute():
+        pure = pathlib.PurePosixPath(*pure.parts[1:])
+    parts = [part for part in pure.parts if part not in {".", "..", ""}]
+    if not parts:
+        return "file"
+    return "/".join(parts)
 
 
 def add_app_log(level: str, message: str) -> None:
@@ -242,6 +254,33 @@ def serialize_content(data: Any, target_format: str) -> ConversionResult:
     raise ConversionError(f"Formato target non valido: {target_format}")
 
 
+def convert_uploaded_file(uploaded, source_format: str, target_format: str) -> tuple[ConversionResult, str]:
+    filename = uploaded.filename or "file"
+    resolved_source = source_format
+    if not resolved_source or resolved_source == "auto":
+        resolved_source = detect_format(filename)
+
+    raw = uploaded.read()
+    if resolved_source in BINARY_FORMATS or target_format in BINARY_FORMATS:
+        if resolved_source not in BINARY_FORMATS or target_format not in BINARY_FORMATS:
+            raise ConversionError("Non puoi mischiare conversioni binary con formati testuali/strutturati")
+        if not _is_binary_conversion_allowed(resolved_source, target_format):
+            raise ConversionError(
+                "Conversione binary non supportata: immagini->immagini, audio->audio, video->video, video->audio"
+            )
+        if resolved_source in IMAGE_FORMATS and target_format in IMAGE_FORMATS:
+            result = _convert_image(raw, resolved_source, target_format)
+        else:
+            result = _convert_media(raw, resolved_source, target_format)
+    else:
+        text = decode_text(raw)
+        parsed = parse_content(text, resolved_source)
+        result = serialize_content(parsed, target_format)
+
+    output_name = f"{pathlib.Path(filename).stem}_converted.{result.extension}"
+    return result, output_name
+
+
 @app.route("/")
 def index() -> str:
     desktop_mode = request.args.get("desktop") == "1"
@@ -259,10 +298,11 @@ def api_logs():
 
 @app.route("/api/convert", methods=["POST"])
 def convert_file():
-    uploaded = request.files.get("file")
+    uploaded_files = request.files.getlist("file")
+    uploaded_files = [item for item in uploaded_files if item and item.filename]
     target_format = (request.form.get("target_format") or "").lower().strip()
 
-    if not uploaded or not uploaded.filename:
+    if not uploaded_files:
         return jsonify({"error": "Carica un file prima di convertire"}), 400
     if target_format not in ALLOWED_FORMATS:
         return jsonify({"error": "Formato di destinazione non valido"}), 400
@@ -273,29 +313,59 @@ def convert_file():
         if source_format and source_format != "auto":
             if source_format not in ALLOWED_FORMATS:
                 raise ConversionError("Formato sorgente indicato non valido")
+
+        detected_formats: list[str] = []
+        if source_format != "auto":
+            detected_formats = [source_format]
         else:
-            source_format = detect_format(uploaded.filename)
+            detected_formats = [detect_format(item.filename) for item in uploaded_files]
 
-        add_app_log("info", f"Conversione richiesta: {uploaded.filename} ({source_format} -> {target_format})")
+        unique_source_formats = sorted(set(detected_formats))
+        if len(unique_source_formats) > 1:
+            raise ConversionError(
+                "Nel caricamento multiplo o cartella i file devono avere lo stesso formato sorgente"
+            )
 
-        raw = uploaded.read()
-        if source_format in BINARY_FORMATS or target_format in BINARY_FORMATS:
-            if source_format not in BINARY_FORMATS or target_format not in BINARY_FORMATS:
-                raise ConversionError("Non puoi mischiare conversioni binary con formati testuali/strutturati")
-            if not _is_binary_conversion_allowed(source_format, target_format):
-                raise ConversionError(
-                    "Conversione binary non supportata: immagini->immagini, audio->audio, video->video, video->audio"
-                )
-            if source_format in IMAGE_FORMATS and target_format in IMAGE_FORMATS:
-                result = _convert_image(raw, source_format, target_format)
-            else:
-                result = _convert_media(raw, source_format, target_format)
-        else:
-            text = decode_text(raw)
-            parsed = parse_content(text, source_format)
-            result = serialize_content(parsed, target_format)
+        effective_source = unique_source_formats[0]
+        if len(uploaded_files) > 1:
+            add_app_log(
+                "info",
+                f"Conversione batch richiesta: {len(uploaded_files)} file ({effective_source} -> {target_format})",
+            )
+            zip_buffer = io.BytesIO()
+            used_names: dict[str, int] = {}
+            with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+                for uploaded in uploaded_files:
+                    result, output_name = convert_uploaded_file(uploaded, source_format, target_format)
+                    rel_name = _normalize_rel_name(uploaded.filename)
+                    parent = pathlib.PurePosixPath(rel_name).parent
+                    base_name = pathlib.Path(output_name).name
 
-        output_name = f"{pathlib.Path(uploaded.filename).stem}_converted.{result.extension}"
+                    final_name = base_name
+                    suffix = used_names.get(base_name, 0)
+                    while final_name in used_names:
+                        suffix += 1
+                        stem = pathlib.Path(base_name).stem
+                        ext = pathlib.Path(base_name).suffix
+                        final_name = f"{stem}_{suffix}{ext}"
+                    used_names[base_name] = max(used_names.get(base_name, 0), suffix)
+                    used_names[final_name] = 1
+
+                    arcname = str(parent / final_name) if str(parent) not in {"", "."} else final_name
+                    archive.writestr(arcname, result.payload)
+
+            zip_buffer.seek(0)
+            add_app_log("ok", f"Conversione batch completata: {len(uploaded_files)} file")
+            return send_file(
+                zip_buffer,
+                mimetype="application/zip",
+                as_attachment=True,
+                download_name="converted_batch.zip",
+            )
+
+        uploaded = uploaded_files[0]
+        add_app_log("info", f"Conversione richiesta: {uploaded.filename} ({effective_source} -> {target_format})")
+        result, output_name = convert_uploaded_file(uploaded, source_format, target_format)
         add_app_log("ok", f"Conversione completata: {output_name}")
         return send_file(
             io.BytesIO(result.payload),

@@ -25,8 +25,16 @@
 
       <section class="panel">
         <form id="convert-form">
+          <label for="upload-mode">Modalita caricamento</label>
+          <select id="upload-mode" name="upload_mode">
+            <option value="single" selected>File singolo</option>
+            <option value="multiple">Più file (stesso tipo)</option>
+            <option value="folder">Cartella (stesso tipo)</option>
+          </select>
+
           <label for="file-input">File</label>
           <input id="file-input" name="file" type="file" required />
+          <p id="file-hint" class="file-hint">Puoi caricare un solo file.</p>
           <input id="source-format" name="source_format" type="hidden" value="auto" />
           <input id="target-format" name="target_format" type="hidden" value="" />
 

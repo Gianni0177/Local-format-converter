@@ -213,6 +213,16 @@ button {
   font: inherit;
 }
 
+#upload-mode {
+  margin-bottom: 0.7rem;
+}
+
+.file-hint {
+  margin: -0.5rem 0 0.85rem;
+  font-size: 0.82rem;
+  color: #4b6760;
+}
+
 input,
 select {
   background: #fff;

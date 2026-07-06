@@ -47,6 +47,7 @@
 | 🎵 Audio | Audio → Audio |
 | 🎬 Video | Video → Video &nbsp;·&nbsp; Video → Audio |
 | 🖼️ Immagini | Immagine → Immagine |
+| 📦 Batch upload | File singolo, multiplo o cartella; in multiplo/cartella tutti i file devono avere lo stesso formato sorgente, output in ZIP |
 | ❌ Non consentito | Binario (audio/video/immagini) ↔ Testo/strutturati |
 
 ---
